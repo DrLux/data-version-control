@@ -1,14 +1,62 @@
 1. Per installare fare: 
-
+    pip install dvc
 
 2. disattivare la statistiche anonime che il tool raccoglie
-dvc config core.analytics false
+    dvc config core.analytics false
 
 3. andare nella top folder e fare: 
-dvc init
+    dvc init
 
 4. aggenciarsi ad un hosting remoto:
-dvc remote add -d remote_storage path/to/your/dvc_remote
+    dvc remote add -d remote_storage path/to/your/dvc_remote
 
 5. le varie info utili (path allo storage remoto) si trovano nel .dvc/config file
+
+6. Tracciare una cartella con file grandi (un dataset)
+    dvc add data/raw/train
+
+Qui lui fa l' hash di tutti i file per tenere traccia velocemente dei cambiamenti,
+copia tutti i file nella cartella .cache (spreco di spazio ma gli serve per gestire le modifiche)
+aggiunge la cartella al gitignore
+crea i suoi file di controllo folder.dvc che vengono visti da git
+
+
+7. fare un push remoto (copia la cartella cache nell' host remoto indicato precedentemente). MANTIENE LA CACHE
+    dvc push
+
+8. se cancelliamo dei file li possiamo ripristinare DALLA CACHE LOCALE con checkout (se non specifico nessun argomento controlla tutta la repo)
+    dvc checkout data/raw/val.dvc
+
+9. il comando per sincronizzare la cache con la folder remota è:
+    dvc fetch 
+
+10. il comando pull fa sia fetch (sincronizza la folder remota con la cache) che checkout (sincronizza la cache con la repo)
+    dvc pull
+
+11. per aggiornare un file che era già stato tracciato usare il commit:
+    dvc commit 
+
+12. modificare il path della cache per metterlo in una cartella condivisa tra più utenti:
+    dvc cache dir path/to/shared_cache
+    mv .dvc/cache/* path/to/shared_cache
+
+Explorando un .dvc file:
+
+
+md5: 62bdac455a6574ed68a1744da1505745       //md5 di questa versione del dvc file
+outs:
+  - md5: 96652bd680f9b8bd7c223488ac97f151   //md5 del file/folder tracciato
+    path: model.joblib                      // path del file/folder tracciato
+    cache: true                             // se il file deve o meno essere cachato
+    metric: false                           //
+    persist: false
+
+
+Evitare lo spreco di spazio:
+- La cache è uno spreco di spazio se viene ripetuta per ogni membro del team ma è una grande feature se si usa una shared cache condivisa
+
+- Inoltre per i file in locale si possono usare softlink. Per farlo si può provare a usare il comando:
+    dvc config cache.type symlink (symlink/reflink/hardlink/copies)
+  se si modifica il cache.type si deve fare anche un checkout particolare (relink) per creare tutti i link dei file tracciati:
+    dvc checkout --relink    
 
